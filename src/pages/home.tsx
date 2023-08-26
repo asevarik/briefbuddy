@@ -28,6 +28,10 @@ import { generateAndDownloadPDF } from "../utils/pdfConverter";
 import { convertAndSaveMarkdown } from "../utils/htmlConverter";
 import { get_summary } from "../network/apiservices";
 import { GetSummaryModel } from "../models/getSummaryModel";
+import "./index.css"
+import Lottie from "lottie-react";
+import page_scan from "../assets/page_scan.json";
+import error_animation from "../assets/error_page_without_lines.json";
 interface DownloadProps {
   isPdfDownload: boolean;
   isMdDownload: boolean;
@@ -40,6 +44,7 @@ function Home() {
     isPdfDownload: false,
     isMdDownload: false,
   });
+  const [isErrorLoadingContent,setIsErrorLoadingContent] = useState<boolean>(false);
   // New state to manage the synthesized speech
   const [synthesis, setSynthesis] = useState<SpeechSynthesis | null>(null);
   // Initialize the SpeechSynthesis instance
@@ -58,6 +63,7 @@ function Home() {
       
       return; // Prevent multiple clicks while loading
     }
+    setIsErrorLoadingContent(false);
     setIsLoading(true);
     let requestModel: GetSummaryModel = {
       url: currentTab,
@@ -71,10 +77,14 @@ function Home() {
     //   })
     //   .catch((error) => {
     //     saveMdContent(ERROR_CONTENT_NOT_FOUND);
+    //     setIsErrorLoadingContent(true);
     //     setIsLoading(false);
     //   });
-    saveMdContent(markdownContent)
-    setIsLoading(false)
+    setTimeout(()=>{
+      saveMdContent(markdownContent)
+      setIsLoading(false)
+    },3000)
+  
 
   };
 
@@ -185,7 +195,7 @@ function Home() {
                   </a>
                 </li>
                 <li>
-                  <a onClick={handleMdDownload}>
+                  <a onClick={handleMdDownload} className="">
                     <DownloadCloud />
                     Md file{" "}
                     {isDownloading.isMdDownload && (
@@ -198,14 +208,14 @@ function Home() {
           </div>
         </div>
         {isLoading ? (
-          <div className="flex flex-col justify-center items-center">
-            <span className="loading loading-spinner loading-lg text-6xl"></span>
+          <div className="flex flex-col justify-center items-center gap-3">
+            <Lottie style={{maxHeight:350}} animationData={page_scan}/>
             <p className="text-center text-base-content">
               {DEFAULT_LOADING_CONTENT}
             </p>
           </div>
         ) : (
-          <div>
+          <div className="mdContainer">
             {mdContent.length < 5 ? (
               <>
                 <p className="text-center text-base-content">
@@ -213,9 +223,21 @@ function Home() {
                 </p>
               </>
             ) : (
+              <>
+              {isErrorLoadingContent?(<>
+              <div className="flex flex-col justify-center items-center gap-3">
+            <Lottie style={{height:350}} animationData={error_animation}/>
+            <p className="text-center text-base-content">
+              {ERROR_CONTENT_NOT_FOUND}
+            </p>
+          </div>
+              </>):
+              
+              (<>
               <ReactMarkdown
                 children={mdContent}
                 className="text-base-content px-8 !text-lg"
+                
                 components={{
                   code({ node, inline, className, lang, children, ...props }) {
                     const match = /language-(\w+)/.exec(className || "");
@@ -235,6 +257,10 @@ function Home() {
                   },
                 }}
               />
+              
+              </>)}
+              
+              </>
             )}
           </div>
         )}

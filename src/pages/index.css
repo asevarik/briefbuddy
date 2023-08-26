@@ -1,0 +1,4 @@
+.mdContainer a{
+    @apply visited:text-primary-focus underline;
+    
+}
